@@ -18,18 +18,18 @@ block_img = pygame.image.load("block.png").convert()
 ball = pygame.transform.scale(block_img, (scale, scale))
 
 class Paddle:
-    def __init__(self, position, limits):
-        self.sprite = pygame.transform.scale(block_img, (scale * 5, scale))
-        self.size = pygame.math.Vector2(scale * 5, scale)
+    def __init__(self, position):
+        self.sprite = pygame.transform.scale(block_img, (scale * 6, scale))
+        self.size = pygame.math.Vector2(scale * 6, scale)
         self.position = position
-        self.limits = limits
+        self.limits = (-self.size.x/2, cv_width - self.size.x/2)
         self.tag = "Paddle"
 
 class Ball:
     def __init__(self, position):
         self.sprite = pygame.transform.scale(block_img, (scale, scale))
         self.size = pygame.math.Vector2(scale, scale)
-        self.velocity = pygame.math.Vector2(1, -1)
+        self.velocity = pygame.math.Vector2(1, 1).normalize()
         self.position = position
         self.speed = 3
         self.tag = "Ball"
@@ -53,12 +53,23 @@ class Ball:
             or 
             (object.position.y > self.position.y and 
              object.position.y < self.position.y + self.size.y))):
-                print("collision")
+                if object.tag == "Paddle":
+                    # Change velocity based on paddle location
+                    if self.position.x < object.position.x + 8:
+                        self.velocity = pygame.math.Vector2(-1, -0.5).normalize()
+                    elif self.position.x < object.position.x + 24:
+                        self.velocity = pygame.math.Vector2(-1, -1).normalize()
+                    elif self.position.x < object.position.x + 56:
+                        self.velocity = pygame.math.Vector2(0, -1).normalize()
+                    elif self.position.x < object.position.x + 72:
+                        self.velocity = pygame.math.Vector2(1, -1).normalize()
+                    else:
+                        self.velocity = pygame.math.Vector2(1, -0.5).normalize()
 
 move_right = False
 move_left = False
 
-paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - scale), (0, cv_width - (scale * 5)))
+paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - scale))
 ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
 
 while running:
