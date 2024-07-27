@@ -22,15 +22,28 @@ class Paddle:
         self.sprite = pygame.transform.scale(block_img, (scale * 5, scale))
         self.position = position
         self.limits = limits
-        
+
+class Ball:
+    def __init__(self, position):
+        self.sprite = pygame.transform.scale(block_img, (scale, scale))
+        self.velocity = pygame.math.Vector2(1, -1)
+        self.position = position
+        self.speed = 3
+    
+    def bounce(self, side_collision):
+        if side_collision:
+            self.velocity.x = -self.velocity.x
+        else:
+            self.velocity.y = -self.velocity.y
+
 move_right = False
 move_left = False
 
 paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - scale), (0, cv_width - (scale * 5)))
+ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
 
 while running:
     canvas.fill(bg_color)
-    canvas.blit(paddle.sprite, paddle.position)
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -55,6 +68,14 @@ while running:
         paddle.position[0] += 3
     if move_left:
         paddle.position[0] -= 3
+
+    ball.position += ball.velocity * ball.speed
+    if  ball.position.x < 0 or ball.position.x > cv_width - scale:
+        ball.bounce(True)
+    if  ball.position.y < 0 or ball.position.y > cv_height - scale:
+        ball.bounce(False)
+    canvas.blit(paddle.sprite, paddle.position)
+    canvas.blit(ball.sprite, ball.position)
     # Use pygame.display.update for specific portions of screen to change
     pygame.display.flip()
     # run at 60 fps
