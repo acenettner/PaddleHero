@@ -20,21 +20,40 @@ ball = pygame.transform.scale(block_img, (scale, scale))
 class Paddle:
     def __init__(self, position, limits):
         self.sprite = pygame.transform.scale(block_img, (scale * 5, scale))
+        self.size = pygame.math.Vector2(scale * 5, scale)
         self.position = position
         self.limits = limits
+        self.tag = "Paddle"
 
 class Ball:
     def __init__(self, position):
         self.sprite = pygame.transform.scale(block_img, (scale, scale))
+        self.size = pygame.math.Vector2(scale, scale)
         self.velocity = pygame.math.Vector2(1, -1)
         self.position = position
         self.speed = 3
+        self.tag = "Ball"
     
     def bounce(self, side_collision):
         if side_collision:
             self.velocity.x = -self.velocity.x
         else:
             self.velocity.y = -self.velocity.y
+
+    def collide(self, object):
+        # If the x and y positions overlap
+        if (((self.position.x > object.position.x and 
+            self.position.x < object.position.x + object.size.x) 
+            or 
+            (object.position.x > self.position.x and 
+             object.position.x < self.position.x + self.size.x))
+            and
+            ((self.position.y > object.position.y and 
+            self.position.y < object.position.y + object.size.y) 
+            or 
+            (object.position.y > self.position.y and 
+             object.position.y < self.position.y + self.size.y))):
+                print("collision")
 
 move_right = False
 move_left = False
@@ -43,8 +62,7 @@ paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - scale), (0, cv_wid
 ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
 
 while running:
-    canvas.fill(bg_color)
-    
+    # Input
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -58,12 +76,12 @@ while running:
                 move_right = False
             if event.key == pygame.K_LEFT:
                 move_left = False
-                
+
+    # Update           
     if paddle.position.x > paddle.limits[1]:
         move_right = False
     if paddle.position.x < paddle.limits[0]:
-        move_left = False
-                
+        move_left = False    
     if move_right:
         paddle.position[0] += 3
     if move_left:
@@ -74,6 +92,11 @@ while running:
         ball.bounce(True)
     if  ball.position.y < 0 or ball.position.y > cv_height - scale:
         ball.bounce(False)
+
+    ball.collide(paddle)
+
+    # Drawing
+    canvas.fill(bg_color)
     canvas.blit(paddle.sprite, paddle.position)
     canvas.blit(ball.sprite, ball.position)
     # Use pygame.display.update for specific portions of screen to change
