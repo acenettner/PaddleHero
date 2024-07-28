@@ -12,29 +12,25 @@ canvas = pygame.display.set_mode((cv_width, cv_height))
 pygame.display.set_caption("PADDLE HERO")
 running = True
 
-scale = 16
-bg_color = (85, 130, 97)
-block_img = pygame.image.load("block.png").convert()
-ball = pygame.transform.scale(block_img, (scale, scale))
-
 class Paddle:
     def __init__(self, position):
-        self.sprite = pygame.transform.scale(block_img, (scale * 6, scale))
-        self.size = pygame.math.Vector2(scale * 6, scale)
+        self.sprite = pygame.transform.scale(block_img, (SCALE * 6, SCALE))
+        self.size = pygame.math.Vector2(SCALE * 6, SCALE)
         self.position = position
         self.limits = (-self.size.x/2, cv_width - self.size.x/2)
         self.tag = "Paddle"
 
 class Ball:
     def __init__(self, position):
-        self.sprite = pygame.transform.scale(block_img, (scale, scale))
-        self.size = pygame.math.Vector2(scale, scale)
+        self.sprite = pygame.transform.scale(block_img, (SCALE, SCALE))
+        self.size = pygame.math.Vector2(SCALE, SCALE)
         self.velocity = pygame.math.Vector2(1, 1).normalize()
         self.position = position
-        self.speed = 3
+        self.speed = 5
         self.tag = "Ball"
     
     def bounce(self, side_collision):
+        pygame.mixer.Sound.play(bounce_sound)
         if side_collision:
             self.velocity.x = -self.velocity.x
         else:
@@ -54,6 +50,7 @@ class Ball:
             (object.position.y > self.position.y and 
              object.position.y < self.position.y + self.size.y))):
                 if object.tag == "Paddle":
+                    pygame.mixer.Sound.play(bounce_sound)
                     # Change velocity based on paddle location
                     if self.position.x < object.position.x + 8:
                         self.velocity = pygame.math.Vector2(-1, -0.5).normalize()
@@ -66,11 +63,30 @@ class Ball:
                     else:
                         self.velocity = pygame.math.Vector2(1, -0.5).normalize()
 
+class Enemy:
+    def __init__(self, position):
+        self.sprite = self.sprite = pygame.transform.scale(block_img, (SCALE * 2, SCALE * 2))
+        self.position = position
+        self.size = pygame.math.Vector2(SCALE * 2, SCALE * 2)
+        self.velocity = pygame.math.Vector2(0, 1).normalize()
+        self.tag = "Enemy"
+
+# Init
+SCALE = 16
+bg_color = (85, 130, 97)
+block_img = pygame.image.load("block.png").convert()
+
 move_right = False
 move_left = False
 
-paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - scale))
+paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - SCALE))
 ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
+bounce_sound = pygame.mixer.Sound("bounce.wav")
+enemies = []
+for i in range(5):
+    enemy = Enemy(pygame.math.Vector2(0, -i * SCALE * 4 - SCALE))
+    enemies.append(enemy)
+
 
 while running:
     # Input
@@ -99,9 +115,14 @@ while running:
         paddle.position[0] -= 3
 
     ball.position += ball.velocity * ball.speed
-    if  ball.position.x < 0 or ball.position.x > cv_width - scale:
+
+    for i in range (len(enemies)):
+        enemies[i].position.y += 1
+
+
+    if  ball.position.x < 0 or ball.position.x > cv_width - SCALE:
         ball.bounce(True)
-    if  ball.position.y < 0 or ball.position.y > cv_height - scale:
+    if  ball.position.y < 0 or ball.position.y > cv_height - SCALE:
         ball.bounce(False)
 
     ball.collide(paddle)
@@ -110,6 +131,8 @@ while running:
     canvas.fill(bg_color)
     canvas.blit(paddle.sprite, paddle.position)
     canvas.blit(ball.sprite, ball.position)
+    for i in range(len(enemies)):
+        canvas.blit(enemies[i].sprite, enemies[i].position)
     # Use pygame.display.update for specific portions of screen to change
     pygame.display.flip()
     # run at 60 fps
