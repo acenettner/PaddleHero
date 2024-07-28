@@ -1,4 +1,5 @@
 import pygame
+import random
 pygame.init()
 
 # clock
@@ -21,6 +22,8 @@ class Paddle:
         self.tag = "Paddle"
 
 class Ball:
+    last = 0
+
     def __init__(self, position):
         self.sprite = pygame.transform.scale(block_img, (SCALE, SCALE))
         self.size = pygame.math.Vector2(SCALE, SCALE)
@@ -82,11 +85,15 @@ move_left = False
 paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - SCALE))
 ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
 bounce_sound = pygame.mixer.Sound("bounce.wav")
+
 enemies = []
-for i in range(5):
-    enemy = Enemy(pygame.math.Vector2(0, -i * SCALE * 4 - SCALE))
+for i in range(6):
+    # Need the - SCALE at the end because of i = 0; We don't want the enemy to spawn on screen immediately
+    enemy = Enemy(pygame.math.Vector2(random.randrange(0, cv_width - SCALE * 2), -i * SCALE * 5 - SCALE))
     enemies.append(enemy)
 
+# Index of last enemy in array. Needed for object pooling
+Enemy.last = len(enemies) - 1
 
 while running:
     # Input
@@ -104,7 +111,7 @@ while running:
             if event.key == pygame.K_LEFT:
                 move_left = False
 
-    # Update           
+    # Update positions         
     if paddle.position.x > paddle.limits[1]:
         move_right = False
     if paddle.position.x < paddle.limits[0]:
@@ -118,8 +125,13 @@ while running:
 
     for i in range (len(enemies)):
         enemies[i].position.y += 1
+        if enemies[i].position.y > cv_height:
+            enemies[i].position.x = random.randrange(0, cv_width - SCALE * 2)
+            enemies[i].position.y = enemies[Enemy.last].position.y - SCALE * 6
+            Enemy.last = i
 
 
+    # Check collisiosn
     if  ball.position.x < 0 or ball.position.x > cv_width - SCALE:
         ball.bounce(True)
     if  ball.position.y < 0 or ball.position.y > cv_height - SCALE:
@@ -127,12 +139,13 @@ while running:
 
     ball.collide(paddle)
 
-    # Drawing
+    # Update sprites
     canvas.fill(bg_color)
     canvas.blit(paddle.sprite, paddle.position)
     canvas.blit(ball.sprite, ball.position)
     for i in range(len(enemies)):
         canvas.blit(enemies[i].sprite, enemies[i].position)
+
     # Use pygame.display.update for specific portions of screen to change
     pygame.display.flip()
     # run at 60 fps
