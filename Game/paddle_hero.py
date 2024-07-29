@@ -20,6 +20,7 @@ class Paddle:
         self.position = position
         self.limits = (-self.size.x/2, cv_width - self.size.x/2)
         self.tag = "Paddle"
+        self.clear_used = False
 
 class Ball:
     last = 0
@@ -67,12 +68,39 @@ class Ball:
                         self.velocity = pygame.math.Vector2(1, -0.5).normalize()
 
 class Enemy:
+    last = 0
     def __init__(self, position):
         self.sprite = self.sprite = pygame.transform.scale(block_img, (SCALE * 2, SCALE * 2))
         self.position = position
         self.size = pygame.math.Vector2(SCALE * 2, SCALE * 2)
         self.velocity = pygame.math.Vector2(0, 1).normalize()
         self.tag = "Enemy"
+
+    def move_to_back(self):
+        self.position.x = random.randrange(0, cv_width - SCALE * 2)
+        self.position.y = enemies[Enemy.last].position.y - SCALE * 6
+        Enemy.last = i
+    
+    def collide(self, object):
+        if (((self.position.x > object.position.x and 
+        self.position.x < object.position.x + object.size.x) 
+        or 
+        (object.position.x > self.position.x and 
+        object.position.x < self.position.x + self.size.x))
+
+        and
+
+        ((self.position.y > object.position.y and 
+        self.position.y < object.position.y + object.size.y) 
+        or 
+        (object.position.y > self.position.y and 
+        object.position.y < self.position.y + self.size.y))):
+            
+            if object.tag == "Ball":
+                self.move_to_back()
+                pygame.mixer.Sound.play(die_sound)
+            elif object.tag == "Paddle":
+                print("game over")
 
 # Init
 SCALE = 16
@@ -85,6 +113,7 @@ move_left = False
 paddle = Paddle(pygame.math.Vector2(cv_width / 2, cv_height - SCALE))
 ball = Ball(pygame.math.Vector2(cv_width/2, cv_height/2))
 bounce_sound = pygame.mixer.Sound("bounce.wav")
+die_sound = pygame.mixer.Sound("die.wav")
 
 enemies = []
 for i in range(6):
@@ -105,6 +134,12 @@ while running:
                 move_right = True
             if event.key == pygame.K_LEFT:
                 move_left = True
+            # Clear all enemies on screen
+            if event.key == pygame.K_SPACE and not paddle.clear_used:
+                for i in range(len(enemies)):
+                    if enemies[i].position.y > -enemies[i].size.y:
+                        enemies[i].move_to_back()
+                paddle.clear_used = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_RIGHT:
                 move_right = False
@@ -126,10 +161,7 @@ while running:
     for i in range (len(enemies)):
         enemies[i].position.y += 1
         if enemies[i].position.y > cv_height:
-            enemies[i].position.x = random.randrange(0, cv_width - SCALE * 2)
-            enemies[i].position.y = enemies[Enemy.last].position.y - SCALE * 6
-            Enemy.last = i
-
+            enemies[i].move_to_back()
 
     # Check collisiosn
     if  ball.position.x < 0 or ball.position.x > cv_width - SCALE:
@@ -138,6 +170,9 @@ while running:
         ball.bounce(False)
 
     ball.collide(paddle)
+    for i in range (len(enemies)):
+        enemies[i].collide(ball)
+        enemies[i].collide(paddle)
 
     # Update sprites
     canvas.fill(bg_color)
