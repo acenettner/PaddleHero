@@ -1,6 +1,6 @@
-How to play:
-
 Note: To play you will need python and pygame installed.
+
+How to play:
 
 A simple paddle game where you try to destroy objects
 as they come down the screen with a ball. If the ball
