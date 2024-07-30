@@ -5,7 +5,8 @@ How to play:
 A simple paddle game where you try to destroy objects
 as they come down the screen with a ball. If the ball
 goes past the paddle or the paddle collides with a
-non ball object, the game is over.
+non ball object, the game is over. You can hold one
+screen wipe, and it gets replenished every 20 points.
 
 Controls:
 - Right and Left arrow keys to move
