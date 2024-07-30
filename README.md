@@ -1,5 +1,6 @@
 Note: To play you will need python and pygame installed.
-Gameplay video: [https://www.youtube.com/watch?v=_lNZiaW3YNk](url)
+
+Gameplay video: https://www.youtube.com/watch?v=_lNZiaW3YNk
 
 How to play:
 
